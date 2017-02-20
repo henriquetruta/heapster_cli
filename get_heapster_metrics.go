@@ -35,26 +35,39 @@ type PodFullStats struct {
 	Stats  PodStats `json:"stats,omitempty"`
 }
 
+func error() {
+	fmt.Fprintf(os.Stderr, "Usage: get_heapster_metrics.go <object (pod/node)> <namespace> <object name> <metric name>\n")
+	os.Exit(1)
+}
+
 func main() {
-	if len(os.Args) < 4 {
-		fmt.Fprintf(os.Stderr, "Usage: %s <object (pod/node)> <namespace> <object name>\n", os.Args[0])
-		os.Exit(1)
+	if len(os.Args) < 2 {
+		error()
 	}
 	object := os.Args[1]
-	ns := os.Args[2]
-	name := os.Args[3]
+	if (object == "pod" || object == "cluster") && (len(os.Args) < 4) {
+		error()
+	}
+	if (object != "metrics") && (len(os.Args) < 3) {
+		error()
+	}
 
 	baseURL := "http://10.11.4.19:32652/api/v1/model/"
 	url := ""
 	if object == "pod" {
+		ns := os.Args[2]
+		name := os.Args[3]
 		url = baseURL + "namespaces/" + ns + "/pods/" + name + "/metrics"
 
 	} else if object == "cluster" {
+		ns := os.Args[2]
+		name := os.Args[3]
 		url = baseURL + "namespaces/" + ns + "/nodes/" + name + "/metrics"
 
-	} else if object == "list" {
+	} else if object == "metrics" {
 		url = baseURL + "metrics"
 	} else {
+		ns := os.Args[2]
 		url = baseURL + "namespaces/" + ns + "/pods"
 	}
 	if len(os.Args) > 4 {
